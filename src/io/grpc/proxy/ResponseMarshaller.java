@@ -1,28 +1,28 @@
 package io.grpc.proxy;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 import io.grpc.MethodDescriptor.Marshaller;
-import io.grpc.examples.experimental.proxy.HelloResponse;
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtobufIOUtil;
 import io.protostuff.Schema;
 import io.protostuff.runtime.RuntimeSchema;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class ResponseMarshaller implements Marshaller<Object> {
 
 	@Override
 	public InputStream stream(Object value) {
 		ByteArrayOutputStream outputstream = new ByteArrayOutputStream();
-		Schema objSchema = RuntimeSchema.getSchema(value.getClass());
-		LinkedBuffer writeBuffer1 = LinkedBuffer.allocate(1000000);
+		ResponseMessageTransfer responseMessageTransfer = new ResponseMessageTransfer();
+		responseMessageTransfer.setObject(value);
+
+		Schema objSchema = RuntimeSchema.getSchema(responseMessageTransfer.getClass());
+		LinkedBuffer writeBuffer1 = LinkedBuffer.allocate(1000);
 		try {
-			ProtobufIOUtil.writeTo(outputstream, value, objSchema, writeBuffer1);
+			ProtobufIOUtil.writeTo(outputstream, responseMessageTransfer, objSchema, writeBuffer1);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -33,16 +33,15 @@ public class ResponseMarshaller implements Marshaller<Object> {
 
 	@Override
 	public Object parse(InputStream stream) {
-		Schema<HelloResponse> respSchema = RuntimeSchema.getSchema(HelloResponse.class);
-		HelloResponse helloResponse = respSchema.newMessage();
+		Schema<ResponseMessageTransfer> respSchema = RuntimeSchema.getSchema(ResponseMessageTransfer.class);
+		ResponseMessageTransfer responseMessageTransfer = respSchema.newMessage();
 		try {
-			ProtobufIOUtil.mergeFrom(stream, helloResponse, respSchema);
+			ProtobufIOUtil.mergeFrom(stream, responseMessageTransfer, respSchema);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		return helloResponse;
+		return responseMessageTransfer.getObject();
 	}
 
-	
 
 }

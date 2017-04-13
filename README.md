@@ -27,4 +27,4 @@ And in a different terminal window run:
 ```
 $ ./build/install/grpc-proxy/bin/java-proxy-client
 ```
-
+bug fixed
